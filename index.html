@@ -1,0 +1,744 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>VELR: Efficient Video Reward Feedback via Ensemble Latent Reward Models</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+
+  <style>
+    video { width: 100%; border-radius: 6px; }
+    .video-pair { margin-bottom: 20px; }
+    .tab-content { display: none; }
+    .tab-content.is-active { display: block; }
+
+    /* 顶部 Original / VELR 字体 */
+    .column-labels { 
+        font-size: 1.5rem; 
+        font-weight: bold; 
+        text-align: center; 
+        margin-bottom: 20px; 
+    }
+
+    /* prompt 样式 */
+    .prompt { 
+        text-align: center; 
+        font-weight: bold; 
+        margin-top: -6px;      /* 🔥 进一步靠近上方视频 */
+        font-size: 1.2rem; 
+    }
+    .prompt hr { 
+        border: 3px solid #333;  /* 🔥 更粗的横线 */
+        margin-top: 5px; 
+        margin-bottom: 18px;
+    }
+
+    /* 🔥 让 Tab 按钮显眼起来 */
+    .tabs.is-boxed li a {
+        font-size: 1.4rem !important;
+        font-weight: 800 !important;
+        padding: 14px 26px !important;
+        border-radius: 10px !important;
+        border: 3px solid #444 !important;
+        background: #fafafa !important;
+        color: #333 !important;
+        transition: 0.2s;
+    }
+
+    .tabs.is-boxed li a:hover {
+        background: #e5e5e5 !important;
+    }
+
+    .tabs.is-boxed li.is-active a {
+        background: #ffd54f !important;
+        border-color: #ffb300 !important;
+        color: black !important;
+        box-shadow: 0 0 12px rgba(255, 200, 0, 0.7);
+    }
+
+  </style>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const tabs = document.querySelectorAll('.tabs li');
+      const contents = document.querySelectorAll('.tab-content');
+
+      tabs.forEach((tab, index) => {
+        tab.addEventListener('click', () => {
+          tabs.forEach(t => t.classList.remove('is-active'));
+          contents.forEach(c => c.classList.remove('is-active'));
+
+          tab.classList.add('is-active');
+          contents[index].classList.add('is-active');
+        });
+      });
+
+      tabs[0].classList.add('is-active');
+      contents[0].classList.add('is-active');
+    });
+
+    // 强制自动播放
+    document.addEventListener('DOMContentLoaded', function () {
+      const videos = document.querySelectorAll('video');
+      videos.forEach(v => {
+        v.muted = true;
+        v.setAttribute('muted', '');
+        const promise = v.play();
+        if (promise !== undefined) {
+          promise.catch(() => console.log("Autoplay blocked for:", v.src));
+        }
+      });
+    });
+  </script>
+</head>
+<body>
+
+<section class="hero is-light">
+  <div class="hero-body">
+    <div class="container has-text-centered">
+      <h1 class="title is-1">VELR: Efficient Video Reward Feedback via Ensemble Latent Reward Models</h1>
+      <h2 class="subtitle is-4">Anonymous Project Page</h2>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+  <div class="comparison-intro">
+  <p><strong>Below we provide side-by-side comparisons of VELR with two strong Reward models, CausalVQA and UnifiedReward.</strong></p>
+  <p><strong>The results are based on Wan-2.1. More videos are on the way.</strong></p>
+<div style="height:50px;"></div>
+
+</div>  
+    <div class="tabs is-centered is-boxed">
+      <ul>
+        <li><a>VELR with UnifiedReward</a></li>
+        <li><a>VELR with CausalVQA</a></li>
+      </ul>
+    </div>
+
+<div class="tab-content">
+  <h2 class="title is-3">VELR with UnifiedReward</h2>
+  <div class="columns column-labels">
+    <div class="column">Original</div>
+    <div class="column">VELR</div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\A 3D model of a 1800s victorian house.-3.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-2\A 3D model of a 1800s victorian house.-3.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      A 3D model of a 1800s victorian house.
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\a bicycle leaning against a tree-2.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-2\a bicycle leaning against a tree-1.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      a bicycle leaning against a tree
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\A boat sailing leisurely along the Seine River with the Eiffel Tower in background by Vincent van Gogh-0.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-2\A boat sailing leisurely along the Seine River with the Eiffel Tower in background by Vincent van Gogh-0.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      A boat sailing leisurely along the Seine River with the Eiffel Tower in background by Vincent van Gogh
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\A cute fluffy panda eating Chinese food in a restaurant-2.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-2\A cute fluffy panda eating Chinese food in a restaurant-0.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      A cute fluffy panda eating Chinese food in a restaurant
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\a dog enjoying a peaceful walk-2.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-2\a dog enjoying a peaceful walk-2.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      a dog enjoying a peaceful walk
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\a dog running happily-2.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-2\a dog running happily-3.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      a dog running happily
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\A fantasy landscape-3.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-2\a fantasy landscape-4.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      A fantasy landscape
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\A fat rabbit wearing a purple robe walking through a fantasy landscape.-0.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-2\A fat rabbit wearing a purple robe walking through a fantasy landscape.-0.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      A fat rabbit wearing a purple robe walking through a fantasy landscape.
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\A friendly dog playing with a curious cat in a colorful garden full of blooming flowers.-0.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-2\A friendly dog playing with a curious cat in a colorful garden full of blooming flowers.-0.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      A friendly dog playing with a curious cat in a colorful garden full of blooming flowers.
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\A happy fuzzy panda playing guitar nearby a campfire, snow mountain in the background-3.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-2\A happy fuzzy panda playing guitar nearby a campfire, snow mountain in the background-1.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      A happy fuzzy panda playing guitar nearby a campfire, snow mountain in the background
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\A koala bear playing piano in the forest.-4.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-2\A koala bear playing piano in the forest.-2.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      A koala bear playing piano in the forest.
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\A lion with the wings of an eagle, soaring through the sky with majestic ease.-0.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-2\A lion with the wings of an eagle, soaring through the sky with majestic ease.-1.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      A lion with the wings of an eagle, soaring through the sky with majestic ease.
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\A panda standing on a surfboard in the ocean in sunset.-2.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-2\A panda standing on a surfboard in the ocean in sunset.-4.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      A panda standing on a surfboard in the ocean in sunset.
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\a person drinking coffee in a cafe-4.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-2\a person drinking coffee in a cafe-4.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      a person drinking coffee in a cafe
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\A raccoon is playing the electronic guitar.-4.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-2\A raccoon is playing the electronic guitar.-1.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      A raccoon is playing the electronic guitar.
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\A squirrel eating a burger.-2.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-2\A squirrel eating a burger.-1.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      A squirrel eating a burger.
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\A super robot protecting city-3.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-2\A super robot protecting city-4.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      A super robot protecting city
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\A tropical beach at sunrise, with palm trees and crystal-clear water in the foreground-1.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-2\A tropical beach at sunrise, with palm trees and crystal-clear water in the foreground-2.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      A tropical beach at sunrise, with palm trees and crystal-clear water in the foreground
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\An artist brush painting on a canvas close up.-4.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-2\An artist brush painting on a canvas close up.-4.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      An artist brush painting on a canvas close up.
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\Campfire at night in a snowy forest with starry sky in the background.-1.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-2\Campfire at night in a snowy forest with starry sky in the background.-0.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      Campfire at night in a snowy forest with starry sky in the background.
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\Few big purple plums rotating on the turntable. water drops appear on the skin during rotation. isolated on the white background. close-up. macro.-2.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-2\Few big purple plums rotating on the turntable. water drops appear on the skin during rotation. isolated on the white background. close-up. macro.-3.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      Few big purple plums rotating on the turntable. water drops appear on the skin during rotation. isolated on the white background. close-up. macro.
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\Splash of turquoise water in extreme slow motion, alpha channel included.-2.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-2\Splash of turquoise water in extreme slow motion, alpha channel included.-2.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      Splash of turquoise water in extreme slow motion, alpha channel included.
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\Yellow flowers swing in the wind-1.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-2\Yellow flowers swing in the wind-1.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      Yellow flowers swing in the wind
+      <hr>
+    </div>
+  </div>
+</div>
+<div class="tab-content">
+  <h2 class="title is-3">VELR with CausalVQA</h2>
+  <div class="columns column-labels">
+    <div class="column">Original</div>
+    <div class="column">VELR</div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\A 3D model of a 1800s victorian house.-3.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-1\A 3D model of a 1800s victorian house.-4.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      A 3D model of a 1800s victorian house.
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\a bicycle leaning against a tree-2.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-1\a bicycle leaning against a tree-0.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      a bicycle leaning against a tree
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\A boat sailing leisurely along the Seine River with the Eiffel Tower in background by Vincent van Gogh-0.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-1\A boat sailing leisurely along the Seine River with the Eiffel Tower in background by Vincent van Gogh-3.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      A boat sailing leisurely along the Seine River with the Eiffel Tower in background by Vincent van Gogh
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\A cute fluffy panda eating Chinese food in a restaurant-2.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-1\A cute fluffy panda eating Chinese food in a restaurant-2.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      A cute fluffy panda eating Chinese food in a restaurant
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\a dog enjoying a peaceful walk-2.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-1\a dog enjoying a peaceful walk-3.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      a dog enjoying a peaceful walk
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\a dog running happily-2.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-1\a dog running happily-1.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      a dog running happily
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\A fantasy landscape-3.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-1\a fantasy landscape-4.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      A fantasy landscape
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\A fat rabbit wearing a purple robe walking through a fantasy landscape.-0.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-1\A fat rabbit wearing a purple robe walking through a fantasy landscape.-1.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      A fat rabbit wearing a purple robe walking through a fantasy landscape.
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\A friendly dog playing with a curious cat in a colorful garden full of blooming flowers.-0.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-1\A friendly dog playing with a curious cat in a colorful garden full of blooming flowers.-0.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      A friendly dog playing with a curious cat in a colorful garden full of blooming flowers.
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\A happy fuzzy panda playing guitar nearby a campfire, snow mountain in the background-3.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-1\A happy fuzzy panda playing guitar nearby a campfire, snow mountain in the background-0.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      A happy fuzzy panda playing guitar nearby a campfire, snow mountain in the background
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\A koala bear playing piano in the forest.-4.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-1\A koala bear playing piano in the forest.-0.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      A koala bear playing piano in the forest.
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\A lion with the wings of an eagle, soaring through the sky with majestic ease.-0.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-1\A lion with the wings of an eagle, soaring through the sky with majestic ease.-0.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      A lion with the wings of an eagle, soaring through the sky with majestic ease.
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\A panda standing on a surfboard in the ocean in sunset.-2.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-1\A panda standing on a surfboard in the ocean in sunset.-3.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      A panda standing on a surfboard in the ocean in sunset.
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\a person drinking coffee in a cafe-4.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-1\a person drinking coffee in a cafe-2.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      a person drinking coffee in a cafe
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\A raccoon is playing the electronic guitar.-4.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-1\A raccoon is playing the electronic guitar.-2.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      A raccoon is playing the electronic guitar.
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\A squirrel eating a burger.-2.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-1\A squirrel eating a burger.-2.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      A squirrel eating a burger.
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\A super robot protecting city-3.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-1\A super robot protecting city-4.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      A super robot protecting city
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\A tropical beach at sunrise, with palm trees and crystal-clear water in the foreground-1.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-1\A tropical beach at sunrise, with palm trees and crystal-clear water in the foreground-3.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      A tropical beach at sunrise, with palm trees and crystal-clear water in the foreground
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\An artist brush painting on a canvas close up.-4.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-1\An artist brush painting on a canvas close up.-0.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      An artist brush painting on a canvas close up.
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\Campfire at night in a snowy forest with starry sky in the background.-1.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-1\Campfire at night in a snowy forest with starry sky in the background.-3.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      Campfire at night in a snowy forest with starry sky in the background.
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\Few big purple plums rotating on the turntable. water drops appear on the skin during rotation. isolated on the white background. close-up. macro.-2.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-1\Few big purple plums rotating on the turntable. water drops appear on the skin during rotation. isolated on the white background. close-up. macro.-0.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      Few big purple plums rotating on the turntable. water drops appear on the skin during rotation. isolated on the white background. close-up. macro.
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\Splash of turquoise water in extreme slow motion, alpha channel included.-2.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-1\Splash of turquoise water in extreme slow motion, alpha channel included.-3.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      Splash of turquoise water in extreme slow motion, alpha channel included.
+      <hr>
+    </div>
+  </div>
+
+  <div class="columns is-multiline video-pair">
+    <div class="column is-6">
+      <video src="original\Yellow flowers swing in the wind-1.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-6">
+      <video src="VELR-1\Yellow flowers swing in the wind-0.mp4" autoplay loop muted playsinline controls></video>
+    </div>
+    <div class="column is-12 prompt">
+      Yellow flowers swing in the wind
+      <hr>
+    </div>
+  </div>
+</div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="content has-text-centered">
+    <p>Website template adapted from Nerfies Project Page.</p>
+  </div>
+</footer>
+
+</body>
+</html>
