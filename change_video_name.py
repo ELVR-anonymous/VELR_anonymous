@@ -198,7 +198,7 @@ def process_all(html_file):
     # fix_html(html_file)
 
     # 2. 修改视频文件名（static, VELR-1, VELR-2）
-    video_dirs = ["static", "VELR-1", "VELR-2"]
+    video_dirs = ["original", "VELR-1", "VELR-2"]
     fix_video_files(video_dirs)
 
 
